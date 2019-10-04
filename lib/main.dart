@@ -7,21 +7,8 @@ void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
 
-
   @override
   Widget build(BuildContext context) {
-    Color color = Theme.of(context).primaryColor;
-    Widget buttonSection = Container(
-      margin:const EdgeInsets.only(top:20),
-      child:Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          _buildTimerColumn(color, Icons.access_alarm, 'Timer'),
-          _buildTimerColumn(color, Icons.access_time, 'Stopwatch'),
-          _buildTimerColumn(color, Icons.add_alarm, 'Incremental'),
-        ],
-      ),
-    );
 
 
     return MaterialApp(
@@ -31,24 +18,55 @@ class MyApp extends StatelessWidget {
         appBar: AppBar(
           title: Text('Welcome to Flutter'),
         ),
-        body: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            buttonSection,
-            VariableTimerWidget(),
-            Text(""),
-          ],
-        ),
+        body: MainWidget(),
       ),
     );
   }
+}
 
-  Column _buildTimerColumn(Color col, IconData icon, String label){
+class MainWidget extends StatefulWidget{
+  @override
+  _MainWidgetState createState() => _MainWidgetState();
+}
+class _MainWidgetState extends State<MainWidget>{
+  Widget currentWidget = TimerWidget();
+  @override
+  Widget build(BuildContext context) {
+    Color color = Theme.of(context).primaryColor;
+    Widget buttonSection = Container(
+      margin:const EdgeInsets.only(top:20),
+      child:Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _buildTimerColumn(color, Icons.access_alarm, 'Timer',TimerWidget()),
+          _buildTimerColumn(color, Icons.access_time, 'Stopwatch',StopwatchWidget()),
+          _buildTimerColumn(color, Icons.add_alarm, 'Incremental',VariableTimerWidget()),
+        ],
+      ),
+    );
+
+    //Body Build
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        buttonSection,
+        currentWidget,
+        Text(""),
+      ],
+    );
+
+  }
+  Column _buildTimerColumn(Color col, IconData icon, String label,Widget connectedWidget){
     return Column(
       mainAxisSize: MainAxisSize.max,
       mainAxisAlignment: MainAxisAlignment.center,
       children : [
-        Icon(icon,color:col),
+        IconButton(icon:Icon(icon),color:col, onPressed: () {
+          setState(() {
+            currentWidget = connectedWidget;
+          });
+
+        },),
         Container(
           margin: const EdgeInsets.only(top:8),
           child: Text(
@@ -64,6 +82,7 @@ class MyApp extends StatelessWidget {
       ],
     );
   }
+
 }
 
 class Time{
