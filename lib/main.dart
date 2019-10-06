@@ -16,7 +16,7 @@ class MyApp extends StatelessWidget {
 
       home: Scaffold(
         appBar: AppBar(
-          title: Text('Welcome to Flutter'),
+          title: Text('Timer'),
         ),
         body: MainWidget(),
       ),
@@ -137,10 +137,10 @@ class _TimerWidgetState extends State<TimerWidget>{
           textAlign: TextAlign.center,
           maxLength: 6,
           onChanged: (text){
-            var test = regExp.allMatches(text.padLeft(6, '0'));
+            var regValues = regExp.allMatches(text.padLeft(6, '0'));
 
             List<int> timerList = [];
-            for(var i in test){
+            for(var i in regValues){
               String x = i.group(0);
               timerList.add(int.parse(x));
             }
@@ -150,10 +150,10 @@ class _TimerWidgetState extends State<TimerWidget>{
             time.seconds = timerList[2];
           },
           onSubmitted: (text){
-            var test = regExp.allMatches(text.padLeft(6, '0'));
+            var regValues = regExp.allMatches(text.padLeft(6, '0'));
 
             List<int> timerList = [];
-            for(var i in test){
+            for(var i in regValues){
               String x = i.group(0);
               timerList.add(int.parse(x));
             }
@@ -269,9 +269,6 @@ class _StopwatchWidgetState extends State<StopwatchWidget> {
   final List<ValueChanged<Time>> timerListeners = <ValueChanged<Time>>[];
   List<String> laps = [];
   final Stopwatch stopwatch = new Stopwatch();
-  final regExp = new RegExp(
-    r"\d{2}",
-  );
   final txtStyle = TextStyle(fontSize: 24,);
   Icon btnIcon = Icon(Icons.play_arrow);
   int hrs = 0;
