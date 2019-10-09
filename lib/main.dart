@@ -1,9 +1,14 @@
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
+import 'package:audioplayers/audio_cache.dart';
 
 
 void main() => runApp(MyApp());
+
+const audioPath = "quick-alarm.WAV";
+Future<AudioPlayer> ap;
 
 class MyApp extends StatelessWidget {
 
@@ -118,6 +123,10 @@ class _TimerWidgetState extends State<TimerWidget>{
   int mins = 0;
   int secs = 0;
   bool timerHasStarted = false;
+  AudioCache audioCache = new AudioCache();
+  bool timerWentOff = false;
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -206,11 +215,18 @@ class _TimerWidgetState extends State<TimerWidget>{
 
   void _startTimer() {
     setState(() {
+      if(timerWentOff){
+        ap.then((value){
+          value.stop();
+        });
+        timerWentOff = false;
+      }
       if(stopwatch.isRunning){
         stopwatch.stop();
         timerHasStarted = false;
         btnIcon = Icon(Icons.play_arrow);
-        textController.text = "$hrs:$mins:$secs";
+        textController.text = "$hrs$mins$secs";
+
       }else{
         stopwatch.start();
         timerHasStarted = true;
@@ -242,9 +258,10 @@ class _TimerWidgetState extends State<TimerWidget>{
         seconds:time.seconds,
       );
       if(time.seconds == 0 && time.minutes == 0 && time.hours == 0){
-        //Call sound/alert to play.
-        print("Timer is done");
+
+        ap = audioCache.loop(audioPath);
         timerListeners.remove(onTick);
+        timerWentOff = true;
         timer.cancel();
       }
       for (final listener in timerListeners) {
@@ -415,6 +432,8 @@ class _VariableTimerWidgetState extends State<VariableTimerWidget> {
   int secs = 0;
   bool timerHasStarted = false;
   bool repeat = false;
+  AudioCache audioCache = new AudioCache();
+  bool timerHasFinished = false;
 
   @override
   Widget build(BuildContext context) {
@@ -501,6 +520,12 @@ class _VariableTimerWidgetState extends State<VariableTimerWidget> {
 
   void _startTimer() {
     setState(() {
+      if(timerHasFinished){
+        ap.then((value){
+          value.stop();
+        });
+        timerHasFinished = false;
+      }
       if (stopwatch.isRunning) {
         stopwatch.stop();
         timerHasStarted = false;
@@ -540,11 +565,14 @@ class _VariableTimerWidgetState extends State<VariableTimerWidget> {
         if(!_setNewTime()){
           if(repeat){
             //call time again to refresh timer;
+            ap = audioCache.play(audioPath);
             currentLoopLocation = 0;
             _setNewTime();
 
           }else {
             timerListeners.remove(onTick);
+            ap = audioCache.loop(audioPath);
+            timerHasFinished = true;
             timer.cancel();
           }
         }
@@ -560,6 +588,9 @@ class _VariableTimerWidgetState extends State<VariableTimerWidget> {
 
   bool _setNewTime(){
     if(currentLoopLocation < times.length){
+      if(currentLoopLocation != 0){
+        ap = audioCache.play(audioPath);
+      }
       var regValues = regExp.allMatches(times[currentLoopLocation]);
       List<String> timerList = [];
       for(var i in regValues){
@@ -571,6 +602,7 @@ class _VariableTimerWidgetState extends State<VariableTimerWidget> {
       int minutes = int.parse(timerList[1]);
       int seconds = int.parse(timerList[2]);
       time = new Time(hours:hours,minutes:minutes,seconds:seconds);
+
       currentLoopLocation++;
       return true;
     }else{
