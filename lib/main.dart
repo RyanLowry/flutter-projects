@@ -260,7 +260,6 @@ class _TimerWidgetState extends State<TimerWidget>{
       if(time.seconds == 0 && time.minutes == 0 && time.hours == 0){
 
         ap = audioCache.loop(audioPath);
-        timerListeners.remove(onTick);
         timerWentOff = true;
         timer.cancel();
       }
@@ -570,7 +569,6 @@ class _VariableTimerWidgetState extends State<VariableTimerWidget> {
             _setNewTime();
 
           }else {
-            timerListeners.remove(onTick);
             ap = audioCache.loop(audioPath);
             timerHasFinished = true;
             timer.cancel();
@@ -602,7 +600,6 @@ class _VariableTimerWidgetState extends State<VariableTimerWidget> {
       int minutes = int.parse(timerList[1]);
       int seconds = int.parse(timerList[2]);
       time = new Time(hours:hours,minutes:minutes,seconds:seconds);
-
       currentLoopLocation++;
       return true;
     }else{
