@@ -129,7 +129,10 @@ class _TimerWidgetState extends State<TimerWidget>{
         stopwatch.stop();
         timerHasStarted = false;
         btnIcon = Icon(Icons.play_arrow);
-        textController.text = "$hrs$mins$secs";
+        String hours = hrs.toString().padLeft(2,"0");
+        String minutes = mins.toString().padLeft(2,"0");
+        String seconds = secs.toString().padLeft(2,"0");
+        textController.text = "$hours$minutes$seconds";
 
       }else{
         stopwatch.start();

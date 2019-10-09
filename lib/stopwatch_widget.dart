@@ -60,6 +60,7 @@ class _StopwatchWidgetState extends State<StopwatchWidget> {
           textAlign: TextAlign.center,
           controller:textController,
           enabled: false,
+          decoration:InputDecoration.collapsed(hintText:null,border:InputBorder.none),
         ),
       ],
     );

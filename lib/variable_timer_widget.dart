@@ -163,7 +163,6 @@ class _VariableTimerWidgetState extends State<VariableTimerWidget> {
       if(time.seconds == 0 && time.minutes == 0 && time.hours == 0){
         if(!_setNewTime()){
           if(repeat){
-            //call time again to refresh timer;
             ap = audioCache.play(audioPath);
             currentLoopLocation = 0;
             _setNewTime();
@@ -225,6 +224,7 @@ class _VariableTimerWidgetState extends State<VariableTimerWidget> {
       for(String time in times){
         textController.text += time + '\n';
       }
+      timeController.text = "";
     });
   }
 }
