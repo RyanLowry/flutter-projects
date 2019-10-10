@@ -1,4 +1,6 @@
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
+import 'dart:async';
 
 void main() => runApp(MyApp());
 
@@ -15,6 +17,51 @@ class MyApp extends StatelessWidget {
   }
 }
 
+
+class AudioManager{
+  AudioPlayer audioplayer = new AudioPlayer();
+  List<String> songs = [];
+  bool hasStarted = false;
+  final audioPath = "placeholder";
+  AudioManager(){
+  }
+
+
+  void playAudio() async {
+    if(hasStarted){
+      await audioplayer.resume();
+    }else{
+      await audioplayer.play(audioPath,isLocal:true);
+    }
+  }
+  void pauseAudio() async {
+    await audioplayer.pause();
+
+  }
+  void replaySong() async {
+    await audioplayer.stop();
+    await audioplayer.resume();
+
+  }
+  void nextSong() async {
+
+  }
+  void previousSong() async {
+
+  }
+  void seekSong(seekValue) async {
+    var duration = audioplayer.getDuration();
+    duration.then((value){
+      double position = (value * seekValue);
+      audioplayer.seek(Duration(milliseconds: position.round()));
+    });
+
+  }
+
+
+}
+
+
 class MyHomePage extends StatefulWidget {
   MyHomePage({Key key, this.title}) : super(key: key);
 
@@ -25,7 +72,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-
+  final man = AudioManager();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -37,8 +84,8 @@ class _MyHomePageState extends State<MyHomePage> {
         mainAxisAlignment: MainAxisAlignment.start,
         children: <Widget>[
           MusicListWidget(),
-          MusicPlayerWidget(),
-          MusicTimerWidget(),
+          MusicPlayerWidget(man:man),
+          MusicTimerWidget(man:man),
         ],
       ),
     );
@@ -81,7 +128,8 @@ class _MusicListWidgetState extends State<MusicListWidget>{
 }
 
 class MusicPlayerWidget extends StatefulWidget{
-  MusicPlayerWidget({Key key,}) : super(key : key);
+  final AudioManager man;
+  MusicPlayerWidget({Key key, this.man}) : super(key : key);
 
   _MusicPlayerWidgetState createState() => _MusicPlayerWidgetState();
 
@@ -98,13 +146,14 @@ class _MusicPlayerWidgetState extends State<MusicPlayerWidget>{
           icon:Icon(Icons.arrow_left),
           iconSize: 48,
           onPressed: (){
-
+            widget.man.seekSong(0.0);
           },
         ),
         IconButton(
           icon:Icon(Icons.play_circle_outline),
           iconSize: 48,
           onPressed: (){
+            widget.man.playAudio();
 
           },
         ),
@@ -122,7 +171,8 @@ class _MusicPlayerWidgetState extends State<MusicPlayerWidget>{
 }
 
 class MusicTimerWidget extends StatefulWidget{
-  MusicTimerWidget({Key key,}) : super(key : key);
+  final AudioManager man;
+  MusicTimerWidget({Key key,this.man}) : super(key : key);
 
   _MusicTimerWidgetState createState() => _MusicTimerWidgetState();
 
@@ -141,6 +191,7 @@ class _MusicTimerWidgetState extends State<MusicTimerWidget>{
         onChanged: (value){
           setState(() {
             _value = value;
+            widget.man.seekSong(value);
           });
 
         },
