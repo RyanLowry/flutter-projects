@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
@@ -35,12 +36,17 @@ class AudioManager{
   final AudioPlayer audioplayer = new AudioPlayer();
   final FileManager filemanager = new FileManager();
   List<String> songs = [];
+  int currentSong = 0;
   bool hasStarted = false;
   // storage/emulated/0/Music/ -- internal storage for android Music location.
-  String audioPath = "placeholder";
+  String audioPath = "storage/emulated/0/Music/";
 
   AudioManager(){
     checkPermissions();
+    new Directory(audioPath).list().listen((entity){
+      songs.add(entity.path);
+
+    });
   }
 
   void checkPermissions() async{
@@ -53,7 +59,7 @@ class AudioManager{
     if(hasStarted){
       await audioplayer.resume();
     }else{
-      await audioplayer.play(audioPath,isLocal:true);
+      await audioplayer.play(songs[currentSong],isLocal:true);
     }
   }
   void pauseAudio() async {
@@ -66,9 +72,21 @@ class AudioManager{
 
   }
   void nextSong() async {
+    currentSong++;
+    if(currentSong > songs.length - 1){
+      currentSong = 0;
+    }
+    await audioplayer.stop();
+    await audioplayer.play(songs[currentSong],isLocal:true);
 
   }
   void previousSong() async {
+    currentSong--;
+    if(currentSong < 0){
+      currentSong = songs.length - 1;
+    }
+    await audioplayer.stop();
+    await audioplayer.play(songs[currentSong],isLocal:true);
 
   }
   void seekSong(seekValue) async {
