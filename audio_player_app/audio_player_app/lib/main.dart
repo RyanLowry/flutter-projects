@@ -1,10 +1,13 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:path_provider/path_provider.dart';
 
 void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -15,18 +18,37 @@ class MyApp extends StatelessWidget {
       home: MyHomePage(title: 'Music Player Page'),
     );
   }
+
+
 }
 
+class FileManager{
+  FileManager();
+
+  Future<String> getStorageDir() async{
+    var dir = await getExternalStorageDirectory();
+    return dir.toString();
+  }
+}
 
 class AudioManager{
-  AudioPlayer audioplayer = new AudioPlayer();
+  final AudioPlayer audioplayer = new AudioPlayer();
+  final FileManager filemanager = new FileManager();
   List<String> songs = [];
   bool hasStarted = false;
-  final audioPath = "placeholder";
+  // storage/emulated/0/Music/ -- internal storage for android Music location.
+  String audioPath = "placeholder";
+
   AudioManager(){
+    checkPermissions();
   }
 
-
+  void checkPermissions() async{
+    PermissionStatus permission = await PermissionHandler().checkPermissionStatus(PermissionGroup.storage);
+    if (permission == PermissionStatus.denied){
+      Map<PermissionGroup, PermissionStatus> permissions = await PermissionHandler().requestPermissions([PermissionGroup.storage]);
+    }
+  }
   void playAudio() async {
     if(hasStarted){
       await audioplayer.resume();
