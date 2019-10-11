@@ -38,14 +38,23 @@ class AudioManager{
   List<String> songs = [];
   int currentSong = 0;
   bool hasStarted = false;
+  bool paused = false;
   // storage/emulated/0/Music/ -- internal storage for android Music location.
   String audioPath = "storage/emulated/0/Music/";
+  int songDuration;
+  Duration currentDuration;
 
   AudioManager(){
     checkPermissions();
     new Directory(audioPath).list().listen((entity){
       songs.add(entity.path);
 
+    });
+    audioplayer.onAudioPositionChanged.listen((pos){
+      currentDuration = pos;
+    });
+    audioplayer.onPlayerCompletion.listen((event) {
+      nextSong();
     });
   }
 
@@ -56,13 +65,18 @@ class AudioManager{
     }
   }
   void playAudio() async {
-    if(hasStarted){
+    if(paused){
       await audioplayer.resume();
     }else{
       await audioplayer.play(songs[currentSong],isLocal:true);
+      await audioplayer.getDuration().then((value){
+        songDuration = value;
+      });
     }
+    paused = false;
   }
   void pauseAudio() async {
+    paused = true;
     await audioplayer.pause();
 
   }
@@ -90,13 +104,22 @@ class AudioManager{
 
   }
   void seekSong(seekValue) async {
-    var duration = audioplayer.getDuration();
-    duration.then((value){
-      double position = (value * seekValue);
-      audioplayer.seek(Duration(milliseconds: position.round()));
-    });
+    double position = (songDuration * seekValue);
+    audioplayer.seek(Duration(milliseconds: position.round()));
 
   }
+  int getDuration(){
+    return songDuration;
+  }
+  double getCurrDuration(){
+    if(currentDuration == null || songDuration == null){
+      return 0.0;
+    }else{
+      return currentDuration.inMilliseconds / songDuration;
+    }
+
+  }
+
 
 
 }
@@ -176,7 +199,8 @@ class MusicPlayerWidget extends StatefulWidget{
 }
 
 class _MusicPlayerWidgetState extends State<MusicPlayerWidget>{
-
+  bool btnPressed = false;
+  Icon btnIcon = Icon(Icons.play_circle_outline);
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -186,14 +210,26 @@ class _MusicPlayerWidgetState extends State<MusicPlayerWidget>{
           icon:Icon(Icons.arrow_left),
           iconSize: 48,
           onPressed: (){
-            widget.man.seekSong(0.0);
+            widget.man.previousSong();
           },
         ),
         IconButton(
-          icon:Icon(Icons.play_circle_outline),
+          icon:btnIcon,
           iconSize: 48,
           onPressed: (){
-            widget.man.playAudio();
+            setState(() {
+              if(btnPressed){
+                btnIcon = Icon(Icons.play_circle_outline);
+                btnPressed = !btnPressed;
+                widget.man.pauseAudio();
+              }else{
+                btnIcon = Icon(Icons.pause_circle_outline);
+                btnPressed = !btnPressed;
+                widget.man.playAudio();
+              }
+
+            });
+
 
           },
         ),
@@ -201,7 +237,7 @@ class _MusicPlayerWidgetState extends State<MusicPlayerWidget>{
           icon:Icon(Icons.arrow_right),
           iconSize: 48,
           onPressed: (){
-
+            widget.man.nextSong();
           },
         ),
       ],
@@ -220,6 +256,7 @@ class MusicTimerWidget extends StatefulWidget{
 
 class _MusicTimerWidgetState extends State<MusicTimerWidget>{
   double _value = 0;
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -234,9 +271,20 @@ class _MusicTimerWidgetState extends State<MusicTimerWidget>{
             widget.man.seekSong(value);
           });
 
+
         },
+
       ),
     );
   }
-
+  @override
+  initState(){
+    super.initState();
+    new Timer.periodic(new Duration(seconds:1), setSlider);
+  }
+  void setSlider(Timer timer){
+    setState(() {
+      _value = widget.man.getCurrDuration();
+    });
+  }
 }
