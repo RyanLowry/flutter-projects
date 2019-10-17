@@ -48,7 +48,10 @@ class AudioManager{
   AudioManager(){
     checkPermissions();
     new Directory(audioPath).list().listen((entity){
-      songs.add(entity.path);
+      if(FileSystemEntity.isFileSync(entity.path) == true){
+        songs.add(entity.path);
+      }
+
 
     },onDone:(){
       hasFiles.notifyListeners();
@@ -189,10 +192,14 @@ class _MusicListWidgetState extends State<MusicListWidget>{
     super.didUpdateWidget(oldWidget);
   }
   updateWidget(){
+    RegExp regExp = new RegExp(
+      r"(?<=\/)[^\/]+$",
+    );
     for(var i = 0; i < widget.man.songs.length; i++) {
         var song = widget.man.songs[i];
+        var songName = regExp.stringMatch(song);
         listMusic.add(new ListTile(
-          title: Text(song),
+          title: Text(songName),
           onTap: () {
             widget.man.setSong(i);
           },
