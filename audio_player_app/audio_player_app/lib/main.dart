@@ -349,8 +349,15 @@ class _MusicTimerWidgetState extends State<MusicTimerWidget>{
     new Timer.periodic(new Duration(seconds:1), setSlider);
   }
   void setSlider(Timer timer){
+    double dur = widget.man.getCurrDuration();
     setState(() {
-      _value = widget.man.getCurrDuration();
+      // <min or >max, set default value. Prevents widget from breaking.
+      if(dur < 0 || dur > 1 || dur == null){
+        _value = 0;
+      } else{
+        _value = widget.man.getCurrDuration();
+      }
+
     });
   }
 }
