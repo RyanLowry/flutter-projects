@@ -39,6 +39,7 @@ class AudioManager{
   int currentSong = 0;
   bool hasStarted = false;
   bool paused = false;
+  ValueNotifier<bool> hasFiles = ValueNotifier(false);
   // storage/emulated/0/Music/ -- internal storage for android Music location.
   String audioPath = "storage/emulated/0/Music/";
   int songDuration;
@@ -49,6 +50,8 @@ class AudioManager{
     new Directory(audioPath).list().listen((entity){
       songs.add(entity.path);
 
+    },onDone:(){
+      hasFiles.notifyListeners();
     });
     audioplayer.onAudioPositionChanged.listen((pos){
       currentDuration = pos;
@@ -120,6 +123,11 @@ class AudioManager{
 
   }
 
+  void setSong(int song) {
+    currentSong = song - 1;
+    nextSong();
+  }
+
 
 
 }
@@ -146,7 +154,7 @@ class _MyHomePageState extends State<MyHomePage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.start,
         children: <Widget>[
-          MusicListWidget(),
+          MusicListWidget(man:man),
           MusicPlayerWidget(man:man),
           MusicTimerWidget(man:man),
         ],
@@ -156,38 +164,68 @@ class _MyHomePageState extends State<MyHomePage> {
 }
 
 class MusicListWidget extends StatefulWidget{
-  MusicListWidget({Key key,}) : super(key : key);
+  final AudioManager man;
+  MusicListWidget({Key key,this.man}) : super(key : key);
 
   @override
   _MusicListWidgetState createState() => _MusicListWidgetState();
 }
 class _MusicListWidgetState extends State<MusicListWidget>{
+  var listMusic = List<ListTile>();
+
+  @override
+  void initState() {
+    widget.man.hasFiles.addListener((){
+      updateWidget();
+    });
+    super.initState();
+  }
+  //Will not update widget if not here.
+  @override
+  void didUpdateWidget(MusicListWidget oldWidget) {
+    setState(() {
+
+    });
+    super.didUpdateWidget(oldWidget);
+  }
+  updateWidget(){
+    for(var i = 0; i < widget.man.songs.length; i++) {
+        var song = widget.man.songs[i];
+        listMusic.add(new ListTile(
+          title: Text(song),
+          onTap: () {
+            widget.man.setSong(i);
+          },
+        ));
+
+    }
+  }
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: <Widget>[
+    return Expanded(
+
+      child:
         ListView(
+
           shrinkWrap: true,
-          children: <Widget>[
-            ListTile(
-              title:Text("test"),
-              onTap: (){
-
-              },
-            ),
-            ListTile(
-              title:Text("list"),
-              onTap: (){
-
-              },
-            ),
-          ],
+          children: _addWidget(),
         ),
 
-      ],
     );
   }
-
+  List<ListTile> _addWidget(){
+    if(listMusic.length == 0){
+      return new List<ListTile>.generate(1, (int i ){
+        return ListTile(
+          title:Text("No music in folder"),
+        );
+      });
+    }else{
+      return new List<ListTile>.generate(listMusic.length,(int index){
+        return listMusic[index];
+      });
+    }
+  }
 }
 
 class MusicPlayerWidget extends StatefulWidget{
@@ -201,6 +239,18 @@ class MusicPlayerWidget extends StatefulWidget{
 class _MusicPlayerWidgetState extends State<MusicPlayerWidget>{
   bool btnPressed = false;
   Icon btnIcon = Icon(Icons.play_circle_outline);
+
+  @override
+  void initState() {
+    widget.man.audioplayer.onPlayerStateChanged.listen((state){
+      if(state == AudioPlayerState.PLAYING){
+        _setBtnType("play");
+      }else if(state == AudioPlayerState.PAUSED || state == AudioPlayerState.STOPPED){
+        _setBtnType("pause");
+      }
+    });
+    super.initState();
+  }
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -217,18 +267,12 @@ class _MusicPlayerWidgetState extends State<MusicPlayerWidget>{
           icon:btnIcon,
           iconSize: 48,
           onPressed: (){
-            setState(() {
-              if(btnPressed){
-                btnIcon = Icon(Icons.play_circle_outline);
-                btnPressed = !btnPressed;
-                widget.man.pauseAudio();
-              }else{
-                btnIcon = Icon(Icons.pause_circle_outline);
-                btnPressed = !btnPressed;
-                widget.man.playAudio();
-              }
+            if(btnPressed){
+              widget.man.pauseAudio();
+            }else{
+              widget.man.playAudio();
+            }
 
-            });
 
 
           },
@@ -242,6 +286,21 @@ class _MusicPlayerWidgetState extends State<MusicPlayerWidget>{
         ),
       ],
     );
+  }
+  void _setBtnType(btnType){
+    setState(() {
+      if(btnType == "pause"){
+        btnIcon = Icon(Icons.play_circle_outline);
+
+
+      }else{
+        btnIcon = Icon(Icons.pause_circle_outline);
+
+
+      }
+      btnPressed = !btnPressed;
+    });
+
   }
 
 }
