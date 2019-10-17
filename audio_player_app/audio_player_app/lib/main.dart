@@ -131,6 +131,10 @@ class AudioManager{
     nextSong();
   }
 
+  void setVolume(double vol){
+    audioplayer.setVolume(vol);
+  }
+
 
 
 }
@@ -246,6 +250,7 @@ class MusicPlayerWidget extends StatefulWidget{
 class _MusicPlayerWidgetState extends State<MusicPlayerWidget>{
   bool btnPressed = false;
   Icon btnIcon = Icon(Icons.play_circle_outline);
+  double _soundVolume = 1;
 
   @override
   void initState() {
@@ -291,6 +296,25 @@ class _MusicPlayerWidgetState extends State<MusicPlayerWidget>{
             widget.man.nextSong();
           },
         ),
+        Row(
+          children: <Widget>[
+            Icon(
+              Icons.volume_up,
+              size:24,
+            ),
+            Slider(
+              min:0,
+              max:1,
+              value:_soundVolume,
+              onChanged: (value){
+                setState(() {
+                  _soundVolume = value;
+                  widget.man.setVolume(value);
+                });
+              },
+            ),
+          ],
+        )
       ],
     );
   }
