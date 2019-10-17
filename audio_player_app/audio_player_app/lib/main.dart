@@ -42,7 +42,7 @@ class AudioManager{
   ValueNotifier<bool> hasFiles = ValueNotifier(false);
   // storage/emulated/0/Music/ -- internal storage for android Music location.
   String audioPath = "storage/emulated/0/Music/";
-  int songDuration;
+  Duration songDuration;
   Duration currentDuration;
 
   AudioManager(){
@@ -56,11 +56,15 @@ class AudioManager{
     },onDone:(){
       hasFiles.notifyListeners();
     });
+
     audioplayer.onAudioPositionChanged.listen((pos){
       currentDuration = pos;
     });
     audioplayer.onPlayerCompletion.listen((event) {
       nextSong();
+    });
+    audioplayer.onDurationChanged.listen((dur) {
+      songDuration = dur;
     });
   }
 
@@ -75,9 +79,7 @@ class AudioManager{
       await audioplayer.resume();
     }else{
       await audioplayer.play(songs[currentSong],isLocal:true);
-      await audioplayer.getDuration().then((value){
-        songDuration = value;
-      });
+
     }
     paused = false;
   }
@@ -99,6 +101,7 @@ class AudioManager{
     await audioplayer.stop();
     await audioplayer.play(songs[currentSong],isLocal:true);
 
+
   }
   void previousSong() async {
     currentSong--;
@@ -110,18 +113,18 @@ class AudioManager{
 
   }
   void seekSong(seekValue) async {
-    double position = (songDuration * seekValue);
+    double position = (songDuration.inMilliseconds * seekValue);
     audioplayer.seek(Duration(milliseconds: position.round()));
 
   }
   int getDuration(){
-    return songDuration;
+    return songDuration.inMilliseconds;
   }
   double getCurrDuration(){
     if(currentDuration == null || songDuration == null){
       return 0.0;
     }else{
-      return currentDuration.inMilliseconds / songDuration;
+      return currentDuration.inMilliseconds / songDuration.inMilliseconds;
     }
 
   }
@@ -257,7 +260,7 @@ class _MusicPlayerWidgetState extends State<MusicPlayerWidget>{
     widget.man.audioplayer.onPlayerStateChanged.listen((state){
       if(state == AudioPlayerState.PLAYING){
         _setBtnType("play");
-      }else if(state == AudioPlayerState.PAUSED || state == AudioPlayerState.STOPPED){
+      }else if(state == AudioPlayerState.PAUSED){
         _setBtnType("pause");
       }
     });
