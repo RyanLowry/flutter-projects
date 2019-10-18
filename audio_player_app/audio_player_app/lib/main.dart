@@ -79,7 +79,6 @@ class AudioManager{
       await audioplayer.resume();
     }else{
       await audioplayer.play(songs[currentSong],isLocal:true);
-
     }
     paused = false;
   }
@@ -98,7 +97,6 @@ class AudioManager{
     if(currentSong > songs.length - 1){
       currentSong = 0;
     }
-    await audioplayer.stop();
     await audioplayer.play(songs[currentSong],isLocal:true);
 
 
@@ -108,7 +106,6 @@ class AudioManager{
     if(currentSong < 0){
       currentSong = songs.length - 1;
     }
-    await audioplayer.stop();
     await audioplayer.play(songs[currentSong],isLocal:true);
 
   }
@@ -325,14 +322,16 @@ class _MusicPlayerWidgetState extends State<MusicPlayerWidget>{
     setState(() {
       if(btnType == "pause"){
         btnIcon = Icon(Icons.play_circle_outline);
+        btnPressed = false;
 
 
       }else{
         btnIcon = Icon(Icons.pause_circle_outline);
+        btnPressed = true;
 
 
       }
-      btnPressed = !btnPressed;
+
     });
 
   }
