@@ -3,7 +3,6 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:path_provider/path_provider.dart';
 
 void main() => runApp(MyApp());
 
@@ -23,18 +22,8 @@ class MyApp extends StatelessWidget {
 
 }
 
-class FileManager{
-  FileManager();
-
-  Future<String> getStorageDir() async{
-    var dir = await getExternalStorageDirectory();
-    return dir.toString();
-  }
-}
-
 class AudioManager{
-  final AudioPlayer audioplayer = new AudioPlayer();
-  final FileManager filemanager = new FileManager();
+  final AudioPlayer audioPlayer = new AudioPlayer();
   List<String> songs = [];
   int currentSong = 0;
   bool hasStarted = false;
@@ -51,19 +40,17 @@ class AudioManager{
       if(FileSystemEntity.isFileSync(entity.path) == true){
         songs.add(entity.path);
       }
-
-
     },onDone:(){
       hasFiles.notifyListeners();
     });
 
-    audioplayer.onAudioPositionChanged.listen((pos){
+    audioPlayer.onAudioPositionChanged.listen((pos){
       currentDuration = pos;
     });
-    audioplayer.onPlayerCompletion.listen((event) {
+    audioPlayer.onPlayerCompletion.listen((event) {
       nextSong();
     });
-    audioplayer.onDurationChanged.listen((dur) {
+    audioPlayer.onDurationChanged.listen((dur) {
       songDuration = dur;
     });
   }
@@ -76,20 +63,15 @@ class AudioManager{
   }
   void playAudio() async {
     if(paused){
-      await audioplayer.resume();
+      await audioPlayer.resume();
     }else{
-      await audioplayer.play(songs[currentSong],isLocal:true);
+      await audioPlayer.play(songs[currentSong],isLocal:true);
     }
     paused = false;
   }
   void pauseAudio() async {
     paused = true;
-    await audioplayer.pause();
-
-  }
-  void replaySong() async {
-    await audioplayer.stop();
-    await audioplayer.resume();
+    await audioPlayer.pause();
 
   }
   void nextSong() async {
@@ -97,7 +79,7 @@ class AudioManager{
     if(currentSong > songs.length - 1){
       currentSong = 0;
     }
-    await audioplayer.play(songs[currentSong],isLocal:true);
+    await audioPlayer.play(songs[currentSong],isLocal:true);
 
 
   }
@@ -106,16 +88,13 @@ class AudioManager{
     if(currentSong < 0){
       currentSong = songs.length - 1;
     }
-    await audioplayer.play(songs[currentSong],isLocal:true);
+    await audioPlayer.play(songs[currentSong],isLocal:true);
 
   }
   void seekSong(seekValue) async {
     double position = (songDuration.inMilliseconds * seekValue);
-    audioplayer.seek(Duration(milliseconds: position.round()));
+    audioPlayer.seek(Duration(milliseconds: position.round()));
 
-  }
-  int getDuration(){
-    return songDuration.inMilliseconds;
   }
   double getCurrDuration(){
     if(currentDuration == null || songDuration == null){
@@ -132,7 +111,7 @@ class AudioManager{
   }
 
   void setVolume(double vol){
-    audioplayer.setVolume(vol);
+    audioPlayer.setVolume(vol);
   }
 
 
@@ -248,13 +227,13 @@ class MusicPlayerWidget extends StatefulWidget{
 }
 
 class _MusicPlayerWidgetState extends State<MusicPlayerWidget>{
-  bool btnPressed = false;
-  Icon btnIcon = Icon(Icons.play_circle_outline);
+  bool _playBtnPressed = false;
+  Icon _btnIcon = Icon(Icons.play_circle_outline);
   double _soundVolume = 1;
 
   @override
   void initState() {
-    widget.man.audioplayer.onPlayerStateChanged.listen((state){
+    widget.man.audioPlayer.onPlayerStateChanged.listen((state){
       if(state == AudioPlayerState.PLAYING){
         _setBtnType("play");
       }else if(state == AudioPlayerState.PAUSED){
@@ -276,10 +255,10 @@ class _MusicPlayerWidgetState extends State<MusicPlayerWidget>{
           },
         ),
         IconButton(
-          icon:btnIcon,
+          icon:_btnIcon,
           iconSize: 48,
           onPressed: (){
-            if(btnPressed){
+            if(_playBtnPressed){
               widget.man.pauseAudio();
             }else{
               widget.man.playAudio();
@@ -321,15 +300,11 @@ class _MusicPlayerWidgetState extends State<MusicPlayerWidget>{
   void _setBtnType(btnType){
     setState(() {
       if(btnType == "pause"){
-        btnIcon = Icon(Icons.play_circle_outline);
-        btnPressed = false;
-
-
+        _btnIcon = Icon(Icons.play_circle_outline);
+        _playBtnPressed = false;
       }else{
-        btnIcon = Icon(Icons.pause_circle_outline);
-        btnPressed = true;
-
-
+        _btnIcon = Icon(Icons.pause_circle_outline);
+        _playBtnPressed = true;
       }
 
     });
@@ -347,7 +322,7 @@ class MusicTimerWidget extends StatefulWidget{
 }
 
 class _MusicTimerWidgetState extends State<MusicTimerWidget>{
-  double _value = 0;
+  double _songPos = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -356,10 +331,10 @@ class _MusicTimerWidgetState extends State<MusicTimerWidget>{
       Slider(
         min:0,
         max:1,
-        value:_value,
+        value:_songPos,
         onChanged: (value){
           setState(() {
-            _value = value;
+            _songPos = value;
             widget.man.seekSong(value);
           });
 
@@ -379,9 +354,9 @@ class _MusicTimerWidgetState extends State<MusicTimerWidget>{
     setState(() {
       // <min or >max, set default value. Prevents widget from breaking.
       if(dur < 0 || dur > 1 || dur == null){
-        _value = 0;
+        _songPos = 0;
       } else{
-        _value = widget.man.getCurrDuration();
+        _songPos = dur;
       }
 
     });
