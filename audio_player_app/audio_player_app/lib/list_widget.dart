@@ -14,17 +14,12 @@ class _MusicListWidgetState extends State<MusicListWidget>{
   @override
   void initState() {
     widget.man.hasFiles.addListener((){
-      updateWidget();
-    });
-    super.initState();
-  }
-  //Will not update widget if not here.
-  @override
-  void didUpdateWidget(MusicListWidget oldWidget) {
-    setState(() {
+      setState(() {
+        updateWidget();
+      });
 
     });
-    super.didUpdateWidget(oldWidget);
+    super.initState();
   }
   updateWidget(){
     // regex finds characters after a slash.
