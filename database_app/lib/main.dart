@@ -1,3 +1,6 @@
+import 'package:database_app/user_dialog.dart';
+import 'package:database_app/user_list.dart';
+import 'package:database_app/user_presenter.dart';
 import 'package:flutter/material.dart';
 
 void main() => runApp(MyApp());
@@ -6,11 +9,11 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'database_app',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
+      home: MyHomePage(title: 'database_app'),
     );
   }
 }
@@ -25,39 +28,45 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
+  UserPresenter userPresenter;
+  Future _displayUserDialog() async{
+    showDialog(
+      context:context,
+      builder:(BuildContext context) =>
+        new UserDialog().buildDialog(context,this)
+    );
   }
-
+  @override
+  void initState(){
+    super.initState();
+    userPresenter = new UserPresenter(this);
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.display1,
-            ),
-          ],
-        ),
-      ),
+      body: new FutureBuilder(
+        future: userPresenter.getUsers(),
+        builder: (context,build){
+          if(build.hasError){
+          print(build.hasError);
+          }
+          var data = build.data;
+          return build.hasData ? new UserList(tasks:data,presenter:userPresenter) : new Center();
+          }),
       floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
+        onPressed: _displayUserDialog,
+        tooltip: "Add user",
+        child:Icon(Icons.add),
       ),
     );
+  }
+
+  void updateData(){
+    setState(() {
+
+    });
   }
 }
